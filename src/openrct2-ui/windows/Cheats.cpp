@@ -217,7 +217,7 @@ static constexpr int32_t TAB_START = 3;
     MakeTab   ({ 96, 17}, STR_STAFF_CHEATS_TIP                          ), /* tab 5 */ \
     MakeTab   ({127, 17}, STR_PARK_CHEATS_TIP                           ), /* tab 6 */ \
     MakeTab   ({158, 17}, STR_RIDE_CHEATS_TIP                           ), /* tab 4 */ \
-    MakeTab   ({189, 17}, STR_WEATHER_NATURE_CHEATS_TIP                 )  /* tab 7 */
+    MakeTab   ({189, 17}, STR_WEATHER_NATURE_CHEATS_TIP                 )  /* tab 7 */ \
 
 static constexpr Widget window_cheats_money_widgets[] =
 {
@@ -1352,4 +1352,5 @@ static StringId window_cheats_page_titles[] = {
         }
         return window;
     }
+
 } // namespace OpenRCT2::Ui::Windows

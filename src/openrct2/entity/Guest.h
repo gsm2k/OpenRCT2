@@ -378,6 +378,10 @@ public:
     // the history, thoughts, etc.
     void RemoveRideFromMemory(RideId rideId);
 
+    // Makes the guest explode and disappear
+    void ExplodeAndRemove(bool playSound);
+    void VaporizeAndRemove();
+
 private:
     void UpdateRide();
     void UpdateOnRide() {}; // TODO
@@ -420,10 +424,12 @@ private:
     void GivePassingPeepsPurpleClothes(Guest* passingPeep);
     void GivePassingPeepsPizza(Guest* passingPeep);
     void MakePassingPeepsSick(Guest* passingPeep);
+    void MakePassingPeepsHappy(Guest* passingPeep);
     void GivePassingPeepsIceCream(Guest* passingPeep);
+    void GivePassingPeepsMoney(Guest* passingPeep);
     Ride* FindBestRideToGoOn();
     OpenRCT2::BitSet<OpenRCT2::Limits::kMaxRidesInPark> FindRidesToGoOn();
-    void GoToRideEntrance(const Ride& ride);
+    void GoToRideEntrance(const Ride& ride);    
 };
 
 void UpdateRideApproachVehicleWaypointsMotionSimulator(Guest&, const CoordsXY&, int16_t&);
@@ -456,7 +462,12 @@ enum
     EASTEREGG_PEEP_NAME_KATIE_SMITH,
     EASTEREGG_PEEP_NAME_EILIDH_BELL,
     EASTEREGG_PEEP_NAME_NANCY_STILLWAGON,
-    EASTEREGG_PEEP_NAME_DAVID_ELLIS
+    EASTEREGG_PEEP_NAME_DAVID_ELLIS,
+    EASTEREGG_PEEP_NAME_MR_BEAST,
+    EASTEREGG_PEEP_NAME_MOHAMMED,
+    EASTEREGG_PEEP_NAME_MAIKE_JENSEN,
+    EASTEREGG_PEEP_NAME_GUSTAV_MEYER
+
 };
 
 void PeepThoughtSetFormatArgs(const PeepThought* thought, Formatter& ft);

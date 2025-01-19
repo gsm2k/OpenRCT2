@@ -418,6 +418,9 @@ namespace OpenRCT2
         STR_WEATHER_NATURE_CHEATS_TIP = 6666,
         STR_YEAR = 6196,
         STR_CHEAT_IGNORE_PRICE_TIP = 6660,
+        // Custom cheat strings. GM 15/01/2025
+        STR_CHEAT_TEST_TAB_TIP = 9000,
+        STR_CHEAT_TEST_STRING = 9001,
 
         // Window: Cheats -- weather
         STR_SUNNY = 5719,

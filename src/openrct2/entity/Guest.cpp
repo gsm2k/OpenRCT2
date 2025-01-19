@@ -78,6 +78,8 @@
 #include <iterator>
 #include <sfl/static_vector.hpp>
 #include <span>
+#include <algorithm>
+
 
 using namespace OpenRCT2;
 using namespace OpenRCT2::Numerics;
@@ -241,6 +243,10 @@ static constexpr const char *gPeepEasterEggNames[] = {
     "EILIDH BELL",
     "NANCY STILLWAGON",
     "DAVID ELLIS",
+    "MR BEAST",
+    "MOHAMMED",
+    "MAIKE JENSEN",
+    "GUSTAV MEYER",
 };
 // clang-format on
 
@@ -549,6 +555,26 @@ void Guest::MakePassingPeepsSick(Guest* passingPeep)
     }
 }
 
+// Function to make passing guests happy by passing by "Maike Jensen". Added by GM 15/01/2025
+void Guest::MakePassingPeepsHappy(Guest* passingPeep)
+{
+    if (passingPeep->Happiness >= 255)
+        return;
+    passingPeep->Happiness = std::clamp(passingPeep->Happiness + 100, 0, 255);
+    passingPeep->HappinessTarget = std::clamp(passingPeep->HappinessTarget + 100, 0, 255);
+    passingPeep->Energy = std::clamp(passingPeep->Energy + 100, 0, 255);
+    passingPeep->EnergyTarget = std::clamp(passingPeep->EnergyTarget + 100, 0, 255);
+
+    if (passingPeep->IsActionInterruptable())
+    {
+        passingPeep->Action = PeepActionType::Clap;
+        passingPeep->AnimationFrameNum = 0;
+        passingPeep->AnimationImageIdOffset = 0;
+        passingPeep->UpdateCurrentAnimationType();
+    }
+}
+
+
 void Guest::GivePassingPeepsIceCream(Guest* passingPeep)
 {
     if (passingPeep->HasItem(ShopItem::IceCream))
@@ -556,6 +582,62 @@ void Guest::GivePassingPeepsIceCream(Guest* passingPeep)
 
     passingPeep->GiveItem(ShopItem::IceCream);
     passingPeep->UpdateAnimationGroup();
+}
+
+// Mr Beast Easter Egg. Added by GM 14/01/2025
+void Guest::GivePassingPeepsMoney(Guest* passingPeep)
+{
+    uint16_t giftAmount = 500;  // 10 currency units equals 1 $/€/£
+
+    // If the peep is out of cash, set leaving park flag and return
+    if (CashInPocket <= giftAmount)
+    {
+        PeepFlags |= PEEP_FLAGS_LEAVING_PARK;
+        PeepFlags &= ~PEEP_FLAGS_PARK_ENTRANCE_CHOSEN;
+        return;
+    }
+
+    PeepFlags &= ~PEEP_FLAGS_LEAVING_PARK;
+    PeepFlags |= PEEP_FLAGS_PARK_ENTRANCE_CHOSEN;
+      
+    if (passingPeep->CashInPocket >= giftAmount)
+        return;
+
+    LOG_INFO("%s gave %u currency units to %s", GetName().c_str(), giftAmount, passingPeep->GetName().c_str());  
+
+    // Take cash from pocket and increment cash spent.
+    CashInPocket -= 500; 
+    CashSpent += 500;  
+    // Give cash to passing peep and increment happiness and energy.
+    passingPeep->CashInPocket += 500;
+    passingPeep->Happiness = std::clamp(passingPeep->Happiness + 100, 0, 255);
+    passingPeep->HappinessTarget = std::clamp(passingPeep->HappinessTarget + 100, 0, 255);
+    passingPeep->Energy = std::clamp(passingPeep->Energy + 100, 0, 255);
+    passingPeep->EnergyTarget = std::clamp(passingPeep->EnergyTarget + 100, 0, 255);
+
+    // Peep is jumping of joy.
+    passingPeep->Action = PeepActionType::Joy;
+    passingPeep->AnimationFrameNum = 0;
+    passingPeep->AnimationImageIdOffset = 0;
+    passingPeep->UpdateCurrentAnimationType();
+}
+
+// Function to make guests explode. Added by GM 15/01/2025
+void Guest::ExplodeAndRemove(bool playSound)
+{    
+    if (playSound)
+    {
+        OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::Crash, GetLocation());
+    }
+    ExplosionCloud::Create({ x, y, z + 10 });
+    SteamParticle::Create({ x, y, z + 16 });
+    Remove();
+}
+
+void Guest::VaporizeAndRemove()
+{
+    SteamParticle::Create({ x, y, z + 5 });
+    Remove();
 }
 
 /**
@@ -587,15 +669,29 @@ void Guest::UpdateEasterEggInteractions()
     if (PeepFlags & PEEP_FLAGS_JOY)
     {
         if ((ScenarioRand() & 0xFFFF) <= 1456)
-        {
+        {            
             if (IsActionInterruptable())
             {
+                // Spread joy to nearby guests. 
+                ApplyEasterEggToNearbyGuests<&Guest::MakePassingPeepsHappy, false>(this);
+                // Jump of joy.
                 Action = PeepActionType::Joy;
                 AnimationFrameNum = 0;
                 AnimationImageIdOffset = 0;
                 UpdateCurrentAnimationType();
             }
         }
+    }
+
+    if (PeepFlags & PEEP_FLAGS_MR_BEAST)
+    {
+        ApplyEasterEggToNearbyGuests<&Guest::GivePassingPeepsMoney, false>(this);
+        Happiness = 255;
+        Energy = 255;
+        Hunger = 255;
+        Thirst = 255;
+        Toilet = 0;
+        Nausea = 0;        
     }
 }
 
@@ -740,6 +836,38 @@ void Guest::HandleEasterEggName()
     if (CheckEasterEggName(EASTEREGG_PEEP_NAME_DAVID_ELLIS))
     {
         PeepFlags |= PEEP_FLAGS_HERE_WE_ARE;
+    }
+
+    PeepFlags &= ~PEEP_FLAGS_MR_BEAST;
+    if (CheckEasterEggName(EASTEREGG_PEEP_NAME_MR_BEAST))
+    {
+        LOG_INFO("Mr. Beast easter egg activated");
+        PeepFlags |= PEEP_FLAGS_MR_BEAST;
+        CashInPocket = 100000;
+    }
+
+    //PeepFlags &= ~PEEP_FLAGS_EXPLODE;
+    if (CheckEasterEggName(EASTEREGG_PEEP_NAME_MOHAMMED))
+    {
+        Angriness = 16;
+        TrousersColour = COLOUR_WHITE;
+        TshirtColour = COLOUR_WHITE;
+        PeepFlags |= PEEP_FLAGS_ANGRY | PEEP_FLAGS_EXPLODE;
+        Invalidate();
+    }
+
+    if (CheckEasterEggName(EASTEREGG_PEEP_NAME_MAIKE_JENSEN))
+    {
+        PeepFlags |= PEEP_FLAGS_JOY;
+        Happiness = 255;
+        HappinessTarget = 255;
+        Energy = 255;
+        EnergyTarget = 255;
+        Nausea = 0;
+        NauseaTarget = 0;
+        TrousersColour = COLOUR_SALMON_PINK;
+        TshirtColour = COLOUR_BRIGHT_PINK;
+        Invalidate();
     }
 }
 
@@ -940,12 +1068,23 @@ void Guest::Tick128UpdateGuest(uint32_t index)
     {
         if (State == PeepState::Walking || State == PeepState::Sitting)
         {
-            OpenRCT2::Audio::Play3D(OpenRCT2::Audio::SoundId::Crash, GetLocation());
+            // Save the nearby guest to a list before exploding.
+            std::vector<Guest*> guestList;
+            for (auto* guest : EntityTileList<Guest>(GetLocation()))
+            {
+                if (guest == this)
+                    continue;
+                guestList.push_back(guest);
+            }
+            // Explode peep and nearby guests.
+            ExplodeAndRemove(true);
+            LOG_INFO("Guest \"%s\" exploded!", GetName().c_str());
+            for (auto* guest : guestList)
+            {
+                LOG_INFO("Guest \"%s\" died.", guest->GetName().c_str());
+                guest->VaporizeAndRemove();
+            }            
 
-            ExplosionCloud::Create({ x, y, z + 16 });
-            ExplosionFlare::Create({ x, y, z + 16 });
-
-            Remove();
             return;
         }
 

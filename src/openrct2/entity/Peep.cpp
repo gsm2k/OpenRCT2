@@ -762,7 +762,7 @@ void Peep::Remove()
         {
             DecrementGuestsHeadingForPark();
         }
-    }
+    }  
     PeepEntityRemove(this);
 }
 
@@ -1027,6 +1027,20 @@ void Peep::Update()
                 guest->PreviousRide = RideId::GetNull();
 
         GuestUpdateThoughts(guest);
+    }
+
+    // Make guests explode after a given delay (ticks).
+    if (GuestRemovalDelay > 0)
+    {
+        if (--GuestRemovalDelay == 0)
+        {
+            if (guest != nullptr)
+            {
+                // The guests should drop their balloons before they are "vaporized"
+                GuestReleaseBalloon(guest, guest->z + 9);
+                guest->VaporizeAndRemove();
+            }          
+        }
     }
 
     // Walking speed logic

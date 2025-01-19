@@ -19,6 +19,8 @@
 #include "../drawing/Drawing.h"
 #include "../entity/Duck.h"
 #include "../entity/EntityRegistry.h"
+#include "../entity/Particle.h"
+#include "../entity/Guest.h"
 #include "../entity/Staff.h"
 #include "../localisation/StringIds.h"
 #include "../network/network.h"
@@ -750,7 +752,9 @@ void CheatSetAction::RemoveAllGuests() const
     // will be fetched on a deleted guest.
     for (auto guest : EntityList<Guest>())
     {
-        guest->Remove();
+        //guest->ExplodeGuest();
+        guest->GuestRemovalDelay = ScenarioRandMax(50) + 1;
+        //guest->Remove();
     }
 
     WindowInvalidateByClass(WindowClass::Ride);

@@ -1043,7 +1043,7 @@ namespace OpenRCT2::Ui::Windows
 
         WindowDropdownShowText(
             { windowPos.x + widget.left, windowPos.y + widget.top }, widget.height() + 1,
-            colours[1].withFlag(ColourFlag::translucent, true), 0, TOP_TOOLBAR_VIEW_MENU_COUNT);
+            colours[1].withFlag(ColourFlag::translucent, true), Dropdown::Flag::StayOpen, TOP_TOOLBAR_VIEW_MENU_COUNT);
 
         // Set checkmarks
         auto* mainViewport = WindowGetMain()->viewport;
@@ -1195,7 +1195,7 @@ namespace OpenRCT2::Ui::Windows
 
         WindowDropdownShowText(
             { windowPos.x + widget.left, windowPos.y + widget.top }, widget.height() + 1,
-            colours[1].withFlag(ColourFlag::translucent, true), 0, i);
+            colours[1].withFlag(ColourFlag::translucent, true), Dropdown::Flag::StayOpen, i);
         gDropdownDefaultIndex = DDIDX_SHOW_MAP;
     }
 
@@ -1266,7 +1266,7 @@ namespace OpenRCT2::Ui::Windows
 
         WindowDropdownShowText(
             { windowPos.x + widget.left, windowPos.y + widget.top }, widget.height() + 1,
-            colours[0].withFlag(ColourFlag::translucent, true), 0, num_items);
+            colours[0].withFlag(ColourFlag::translucent, true), Dropdown::Flag::StayOpen, num_items);
 
         // Set checkmarks
         if (gGameSpeed <= 4)
@@ -1403,6 +1403,8 @@ namespace OpenRCT2::Ui::Windows
         WindowDropdownShowText(
             { windowPos.x + widget.left, windowPos.y + widget.top }, widget.height() + 1,
             colours[0].withFlag(ColourFlag::translucent, true), Dropdown::Flag::StayOpen, numItems);
+
+        gDropdownDefaultIndex = DDIDX_SAVE_GAME;
     }
 
     void TopToolbar::InitCheatsMenu(Widget& widget)
